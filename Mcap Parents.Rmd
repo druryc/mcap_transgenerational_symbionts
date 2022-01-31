@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 Script analyzing ITS2 for Mcap parents in Kaneohe Bay
 Data processed in Symportal
+
+
+**** note in data 121C is really 1212C! change
 #
 ```{r}
 #library
@@ -118,17 +121,18 @@ coral2 <- coral %>%
 coralDIV2 <- coralDIV %>% 
   subset_samples(!is.na(host_species))
 
-# HERE YOU MAKE RELA DATA ACTUALLY OUT OF 100% 
-# Transform to relative abundance
-coral2 <- transform_sample_counts(coral2, function(x) 100 * x/sum(x))
-coralDIV2 <- transform_sample_counts(coralDIV2, function(x) 100 * x/sum(x))
+# HERE YOU MAKE RELA DATA ACTUALLY OUT OF 100%
+# Transform to relative abundance 
+#coral2 <- transform_sample_counts(coral2, function(x) 100 * x/sum(x))
+#coralDIV2 <- transform_sample_counts(coralDIV2, function(x) 100 * x/sum(x))
+
 
 ```
 
 Monster all data vis (not helpful)
 ```{r, fig.width = 10, fig.height = 40} 
 # Plot ITS2 profiles for each coral sample by species and site
-plot_bar(coral, fill = "its2_type_profile") +
+plot_bar(coral2, fill = "its2_type_profile") +
   facet_wrap(~ host_genus + host_species, ncol = 6, scales = "free") +
   #theme(legend.position = "none") +
   geom_bar(stat = "identity")
@@ -173,29 +177,31 @@ sample_names(coralDIV2) #pring sample names
 LOWtest <- subset_samples(coralDIV2, 
                             sample_name =="10A"| 
                             sample_name =="1255A"|
-                            sample_name =="1261C"|
+                            #sample_name =="1261C"|
                             sample_name =="1263A"|
                             sample_name =="1263B"|
                             sample_name =="141B"|
-                            sample_name =="141C"|
-                             sample_name =="146B"|
+                          #  sample_name =="141C"|
+                           #  sample_name =="146B"|
                             sample_name =="146C"|
-                            sample_name =="151C"|
+                            #sample_name =="151C"|
                             sample_name =="160C"|
-                            sample_name =="315A"|
-                            sample_name =="333C"|
+                            #sample_name =="315A"|
+                           #sample_name =="333C"|
                             sample_name =="353C"|
                             sample_name =="386C"|
-                            sample_name =="485B"|
-                            sample_name =="497C"|
-                             sample_name =="576B"|
-                            sample_name =="620A"|
+                           # sample_name =="485B"|
+                           # sample_name =="497C"|
+                            # sample_name =="576B"|
+                           # sample_name =="620A"|
                             sample_name =="620C"|
                             sample_name =="684C"|
-                            sample_name =="70A"|
+                           # sample_name =="70A"|
                             sample_name =="70B"|
-                            sample_name =="745C"|
-                            sample_name =="83B") #subset multiple samples
+                            sample_name =="745C")
+                           # sample_name =="83B"
+                             #subset multiple samples
+# above are the samples with a cut off of 1500k
 
    LOWtest.prune <- prune_taxa(taxa_sums(LOWtest) >0, LOWtest) # prune all 0s
      
@@ -210,8 +216,9 @@ LOWtest <- subset_samples(coralDIV2,
 Remove low samples from the datasets (doing >1500)
 ```{r} 
 #DIVs 
-to_remove <- c("PCR-Pos1", "PCR-Pos2", "PCR-Neg1", "PCR_Neg2","353C","684C", "386C","10A","146C","1263B","620C","745C","70B","1255A","146B","1263A","160C","1261C","485B","315A","333C") #make list of samples to remove with less than 1500 seqs
-#"151C","497C","141C","576B","620A","70A","141B","83B" add backin if 2k cutoff
+to_remove <- c("PCR-Pos1", "PCR-Pos2", "PCR-Neg1", "PCR_Neg2","353C","684C", "386C","10A","146C","1263B","620C","745C","70B","1255A","146B","1263A","160C") #make list of samples to remove with less than 1299 seqs
+# "1261C","485B","315A","333C" add backin if less than 1500
+#"151C","497C","141C","576B","620A","70A","141B","83B" add back in if 2k cutoff
 
 coralDIV2.prune <- prune_samples(!(sample_names(coralDIV2) %in% to_remove), coralDIV2) #remove
 #sample_names(coralDIV2.prune) # check to see they are removed
@@ -283,15 +290,15 @@ Plots DIVS
 ```{r}  
   coralDIV2.prune = prune_taxa(taxa_sums(coralDIV2.prune) > 0, coralDIV2.prune) #this removes any OTU with 0s
 
-plot_bar(coralDIV2.prune, "DIV", fill="DIV", facet_grid=~Colony)+theme(legend.position="none")
+#plot_bar(coralDIV2.prune, "DIV", fill="DIV", facet_grid=~Colony)+theme(legend.position="none")
 
 #for the legend
  plot_bar(Mcap_10,fill = "DIV")+
       geom_bar(aes(color=DIV, fill=DIV), stat="identity", position="stack")
 
-Mcap_10_plot<-plot_bar(Mcap_10, "sample_name", fill="DIV", title="Mcap_970")+
+Mcap_10_plot<-plot_bar(Mcap_10, "sample_name", fill="DIV", title="Mcap_10")+
    theme(legend.position="none");Mcap_10_plot
-Mcap_120_plot<-plot_bar(Mcap_120, "sample_name", fill="DIV", title="Mcap_965")+
+Mcap_120_plot<-plot_bar(Mcap_120, "sample_name", fill="DIV", title="Mcap_120")+
    theme(legend.position="none");Mcap_120_plot
 Mcap_1212_plot<-plot_bar(Mcap_1212, "sample_name", fill="DIV", title="Mcap_1212")+
    theme(legend.position="none");Mcap_1212_plot
@@ -422,9 +429,6 @@ names(speciesPalette) = speciesList
 #scale_fill_manual(values= speciesPalette)
 
 #this works but you need better pallet color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
-
-
-
 
 
 sample_variables(coral2.prune) #what are the variables
@@ -774,8 +778,52 @@ Mcap_DIV_PRO_plot7 <- ggarrange(Pro_Mcap_95_plot,
                     #labels = c("A", "B", "C","D","E","F","G","H"),
                     ncol = 4, nrow = 3);Mcap_DIV_PRO_plot7
 
+
+
+
+ 
+ 
+ 
+ 
 ```
 
+ID avg clade per genotype
+```{r}
+#do tax glom in the data to group C and D 
+
+ data.clade<- tax_glom(coral2.prune, taxrank="clade") 
+
+## calcualte average percent C and D per genotype
+#read in by clade %
+ clade.percent<-read.csv("data/ford mcap clades 1299cutoff.csv")
+ 
+ cp<-clade.percent
+ cp<-tibble(cp)
+ 
+ cp<-cp%>%
+  group_by(genotype) %>%
+   summarise(n=n(),meanC=mean(C), meanD=mean(D))
+  
+ cp<-cp%>% 
+   arrange(meanC)
+  
+  
+ cp2<-cp %>%
+ pivot_longer(cp, cols=3:4,names_to="clade",values_to = "percent")
+ 
+
+ #write.csv(cp,"geno.clades.csv")  
+   
+#plots
+
+ p<-  ggplot(data=cp2,aes(x=reorder(genotype,-percent), y=percent, fill=clade))
+             
+   p + geom_bar(position = "fill", stat="identity")
+   
+  
+             
+```
+ 
 
 
 big fig

@@ -115,7 +115,6 @@ load("data/coral_phyloseq.RData")
 ```
 
 ```{r}
-#Hey what does this do?
 coral2 <- coral %>% 
   subset_samples(!is.na(host_species))
 coralDIV2 <- coralDIV %>% 
@@ -131,25 +130,25 @@ coralDIV2 <- coralDIV %>%
 
 Monster all data vis (not helpful)
 ```{r, fig.width = 10, fig.height = 40} 
-# Plot ITS2 profiles for each coral sample by species and site
-plot_bar(coral2, fill = "its2_type_profile") +
-  facet_wrap(~ host_genus + host_species, ncol = 6, scales = "free") +
-  #theme(legend.position = "none") +
-  geom_bar(stat = "identity")
-# Plot all post-MED sequences
-plot_bar(coralDIV2, fill = "DIV") +
-  facet_wrap(~ host_genus + host_species, scales = "free") +
-  #theme(legend.position = "none") +
-  geom_bar(stat = "identity")
-# Glom all post-MED sequences by clade:
-divclades <- coralDIV2 %>%
-  tax_glom(taxrank = "clade") %>%                # agglomerate at clade level
-  psmelt() %>%                                         # Melt to long format
-  arrange(clade)                                      # Sort data frame alphabetically by clade
-ggplot(divclades, aes(x = Sample, y = Abundance, fill = clade)) +
-  facet_wrap(~ host_genus + host_species, scales = "free") +
-  geom_bar(stat = "identity") +
-  labs(title=NULL, x = NULL, y = "Relative abundance")
+# # Plot ITS2 profiles for each coral sample by species and site
+# plot_bar(coral2, fill = "its2_type_profile") +
+#   facet_wrap(~ host_genus + host_species, ncol = 6, scales = "free") +
+#   #theme(legend.position = "none") +
+#   geom_bar(stat = "identity")
+# # Plot all post-MED sequences
+# plot_bar(coralDIV2, fill = "DIV") +
+#   facet_wrap(~ host_genus + host_species, scales = "free") +
+#   #theme(legend.position = "none") +
+#   geom_bar(stat = "identity")
+# # Glom all post-MED sequences by clade:
+# divclades <- coralDIV2 %>%
+#   tax_glom(taxrank = "clade") %>%                # agglomerate at clade level
+#   psmelt() %>%                                         # Melt to long format
+#   arrange(clade)                                      # Sort data frame alphabetically by clade
+# ggplot(divclades, aes(x = Sample, y = Abundance, fill = clade)) +
+#   facet_wrap(~ host_genus + host_species, scales = "free") +
+#   geom_bar(stat = "identity") +
+#   labs(title=NULL, x = NULL, y = "Relative abundance")
 ```
 
 Data wrangle: remove samples with under 2k 
@@ -275,7 +274,7 @@ Mcap_649 <- subset_samples(coralDIV2.prune, Colony =="649") #Subset by colony
 Mcap_670 <- subset_samples(coralDIV2.prune, Colony =="670") #Subset by colony 
 Mcap_677 <- subset_samples(coralDIV2.prune, Colony =="677") #Subset by colony 
 Mcap_684 <- subset_samples(coralDIV2.prune, Colony =="684") #Subset by colony 
-Mcap_70 <- subset_samples(coralDIV2.prune, Colony =="70") #Subset by colony     FIX
+Mcap_70 <- subset_samples(coralDIV2.prune, Colony =="70") #Subset by colony   
 Mcap_742 <- subset_samples(coralDIV2.prune, Colony =="742") #Subset by colony 
 Mcap_745 <- subset_samples(coralDIV2.prune, Colony =="745") #Subset by colony 
 Mcap_748 <- subset_samples(coralDIV2.prune, Colony =="748") #Subset by colony 
@@ -432,8 +431,10 @@ names(speciesPalette) = speciesList
 
 
 sample_variables(coral2.prune) #what are the variables
+#sample_variables(coral2) # use to check low samps for geno with only 1
 
 Pro_Mcap_A <- subset_samples(coral2.prune, Replicate =="A") #Subset by colony  
+#Pro_Mcap_A <- subset_samples(coral2, Replicate =="A") #check low samp
 
 #something in sd is off so blank spaces inserted into colony name
 Pro_Mcap_10 <- subset_samples(coral2.prune, Colony=="  10") #Subset by colony  
@@ -487,7 +488,10 @@ Pro_Mcap_823 <- subset_samples(coral2.prune, Colony ==" 823") #Subset by colony
 Pro_Mcap_83 <- subset_samples(coral2.prune, Colony =="  83") #Subset by colony 
 Pro_Mcap_95 <- subset_samples(coral2.prune, Colony =="  95") #Subset by colony 
 
-  
+#check low samples that were culled for samples with only n=1
+#Pro_Mcap_1263 <- subset_samples(coral2, Colony =="1263") #Subset by colony 
+#Pro_Mcap_146 <- subset_samples(coral2, Colony ==" 146") #Subset by colony 
+#Pro_Mcap_70 <- subset_samples(coral2, Colony =="  70") #Subset by colony     
 ```
 Plots PRO
 ```{r} 

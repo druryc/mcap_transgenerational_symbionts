@@ -43,7 +43,7 @@ rownames(sam1) <- sam0$sample_name
 sam <- sample_data(data.frame(sam1))
 
 tax0 <- read_tsv(
-  file  = "/Users/shayle/Desktop/Mcap_Parents/Mcap_parents/data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt",
+  file  = "data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt",
   n_max = 6) %>%
   dplyr::select(-2) %>% 
   gather(UID, value, -1) %>% 
@@ -55,7 +55,7 @@ rownames(tax1) <- tax0$uid
 tax <- tax_table(tax1)
 
 otu0 <- read_tsv(
-  file  = "/Users/shayle/Desktop/Mcap_Parents/Mcap_parents/data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt") %>% 
+  file  = "data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt") %>% 
   rename(sample_name = 2) %>%  # this used to be X2 for some reason now it's just 2
   select(-1) %>%
   slice(7:n()) %>%
@@ -128,7 +128,7 @@ coralDIV2 <- coralDIV %>%
 
 ```
 
-Monster all data vis (not helpful)
+Monster all data vis (not helpful, and takes forever to run)
 ```{r, fig.width = 10, fig.height = 40} 
 # # Plot ITS2 profiles for each coral sample by species and site
 # plot_bar(coral2, fill = "its2_type_profile") +
@@ -155,7 +155,7 @@ Data wrangle: remove samples with under 2k
 ```{r} 
 #lets see what is up with the low samps
 
-LowSamps<-readxl::read_xlsx("/Users/shayle/Desktop/Mcap_Parents/Mcap_parents/data/post_med_seqs/190_20220112_03_DBV_20220114T140414.seqs.absolute.meta_only.xlsx")
+LowSamps<-readxl::read_xlsx("data/post_med_seqs/190_20220112_03_DBV_20220114T140414.seqs.absolute.meta_only.xlsx")
 
 LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs_log<-log10(LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs)
 hist(LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs_log, breaks=30)

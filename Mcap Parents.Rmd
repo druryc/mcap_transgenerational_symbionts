@@ -12,7 +12,7 @@ Script analyzing ITS2 for Mcap parents in Kaneohe Bay
 Data processed in Symportal
 
 
-**** note in data 121C is really 1212C! change
+**** note in data 121C is really 1212C! change <- updated in re-run symportal (not shown here)
 #
 ```{r}
 #library

@@ -1,0 +1,173 @@
+---
+title: "Mcap_parents Data Wrangle"
+author: "Shayle Matsuda"
+date: "1/17/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Script analyzing ITS2 for Mcap parents in Kaneohe Bay
+Data processed in Symportal
+
+```{r}
+#library
+library(janitor)
+library(phyloseq)  # source('http://bioconductor.org/biocLite.R'); biocLite('phyloseq')
+library(zoo)
+library(stringr)
+library(vegan)
+library(multcompView)
+library("ggpubr")
+library(readxl)
+library("writexl")
+library(tidyverse)
+```
+
+# Relative Abundance 
+Read in coral ITS2 profiles: "coral"
+```{r}  
+#add metadata to symportal submission data
+Symp_sub<-readxl::read_xlsx("data/ITS2_Mcap_Ford_Feb2023.xlsx", skip = 1)
+Metadata<-read.csv("data/Mcap_parents_metadata.csv") #121C is 1212C
+Metadata<-rename(Metadata, sample_name=Sample.ID) #rename UNIQUEID column to sample_name
+Symp_sub_Meta<-left_join(Symp_sub, Metadata, by="sample_name") # merge
+#save in correct format:
+write_xlsx(Symp_sub_Meta,"ITS2_Mcap_Ford2022b.xlsx")
+
+sam0 <- readxl::read_xlsx("ITS2_Mcap_Ford2022b.xlsx") #Symportal metadata combined from above
+sam1 <- as.matrix(sam0[, -1])
+rownames(sam1) <- sam0$sample_name
+sam <- sample_data(data.frame(sam1))
+
+tax0 <- read_tsv(
+  file  = "data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt",
+  n_max = 6) %>%
+  dplyr::select(-2) %>% 
+  gather(UID, value, -1) %>% 
+  spread(1, value) %>%
+  clean_names()
+
+tax1 <- as.matrix(tax0[, -1], dimnames = list(tax0$uid, colnames(tax0[-1])))
+rownames(tax1) <- tax0$uid
+tax <- tax_table(tax1)
+
+otu0 <- read_tsv(
+  file  = "data/its2_type_profiles/190_20220112_03_DBV_20220114T140414.profiles.relative.abund_and_meta.txt") %>% 
+  rename(sample_name = 2) %>%  # this used to be X2 for some reason now it's just 2
+  select(-1) %>%
+  slice(7:n()) %>%
+  mutate_at(2:ncol(.), as.numeric)
+otu1 <- as.matrix(otu0[, -1])
+rownames(otu1) <- otu0$sample_name
+otu <- otu_table(otu1, taxa_are_rows = FALSE)
+
+coral <- phyloseq(otu, tax, sam)
+```
+Read in coral post-QC sequence variants: "coralDIV"
+```{r}  
+sam0 <- read_xlsx("ITS2_Mcap_Ford2022b.xlsx")
+rownames(sam0) <- sam0$sample_name
+sam <- sample_data(data.frame(sam0))
+
+taxnames <- read_tsv(
+  file  = "data/post_med_seqs/190_20220112_03_DBV_20220114T140414.seqs.relative.abund_only.txt",
+  n_max = 0) %>%
+  select(-1) %>%
+  names(.)
+tax0 <- data_frame(
+  DIV = taxnames,
+  clade = str_extract(DIV, "[A-Z]")
+)
+tax1 <- as.matrix(tax0)
+rownames(tax1) <- tax0$DIV
+tax <- tax_table(tax1)
+
+otu0 <- read_tsv(
+  file  = "data/post_med_seqs/190_20220112_03_DBV_20220114T140414.seqs.relative.abund_only.txt") %>%
+  select(-1, )
+otu1 <- as.matrix(otu0[, -1])####### you changed this not sure what select(3:33) was about
+rownames(otu1) <- sam0$sample_name
+otu <- otu_table(otu1, taxa_are_rows = FALSE)
+coralDIV <- phyloseq(otu, tax, sam)
+```
+
+#Quality Check - remove low samples
+```{r}
+coral2 <- coral %>% 
+  subset_samples(!is.na(host_species))
+coralDIV2 <- coralDIV %>% 
+  subset_samples(!is.na(host_species))
+
+# Transform to relative abundance after raw reads checks
+#coral2 <- transform_sample_counts(coral2, function(x) 100 * x/sum(x))
+#coralDIV2 <- transform_sample_counts(coralDIV2, function(x) 100 * x/sum(x))
+
+
+```
+
+Data wrangle: remove samples with under 1500 
+```{r} 
+LowSamps<-readxl::read_xlsx("data/post_med_seqs/190_20220112_03_DBV_20220114T140414.seqs.absolute.meta_only.xlsx")
+LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs_log<-log10(LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs)
+hist(LowSamps$post_taxa_id_absolute_symbiodiniaceae_seqs_log, breaks=30)
+```
+Look at the low samples: no patterns
+```{r} 
+sample_names(coralDIV2) #print sample names
+#look at NTCs
+#Negative Controls
+  NTCtest <- subset_samples(coralDIV2, sample_name =="PCR-Neg1"| sample_name =="PCR-Neg2") #subset multiple samples
+   NTCtest.prune <- prune_taxa(taxa_sums(NTCtest) >0, NTCtest)
+     plot_bar(NTCtest.prune,fill = "DIV")+
+      geom_bar(aes(color=DIV, fill=DIV), stat="identity", position="stack")
+     
+#Samples under 1500 hits removed
+LOWtest <- subset_samples(coralDIV2, 
+                            sample_name =="10A"| 
+                            sample_name =="1255A"|
+                            sample_name =="1263A"|
+                            sample_name =="1263B"|
+                            sample_name =="141B"|
+                            sample_name =="146C"|
+                            sample_name =="160C"|
+                            sample_name =="353C"|
+                            sample_name =="386C"|
+                            sample_name =="620C"|
+                            sample_name =="684C"|
+                            sample_name =="70B"|
+                            sample_name =="745C")
+                             #subset multiple samples
+
+   LOWtest.prune <- prune_taxa(taxa_sums(LOWtest) >0, LOWtest) # prune all 0s
+     
+   plot_bar(LOWtest,fill = "DIV")+                     # plot DIVS
+    geom_bar(aes(color=DIV, fill=DIV), stat="identity", position="stack")
+     
+   plot_bar(LOWtest,fill = "clade")+                     # plot Clades
+      geom_bar(aes(color=clade, fill=clade), stat="identity", position="stack")
+```
+ 
+Remove low samples from the datasets (samples with less than 1500)
+```{r} 
+#DIVs 
+to_remove <- c("PCR-Pos1", "PCR-Pos2", "PCR-Neg1", "PCR_Neg2","353C","684C", "386C","10A","146C","1263B","620C","745C","70B","1255A","146B","1263A","160C") #make list of samples to remove with less than 1299 seqs
+# "1261C","485B","315A","333C" add backin if less than 1500
+#"151C","497C","141C","576B","620A","70A","141B","83B" add back in if 2k cutoff
+
+coralDIV2.prune <- prune_samples(!(sample_names(coralDIV2) %in% to_remove), coralDIV2) #remove
+#sample_names(coralDIV2.prune) # check to see they are removed
+
+#Pros
+coral2.prune <- prune_samples(!(sample_names(coral2) %in% to_remove), coral2) #remove
+#sample_names(coral2.prune) # check to see they are removed
+
+```
+
+Save as RData
+```{r} 
+save(coral, coralDIV, file = "data/coral_phyloseq.RData")
+```
